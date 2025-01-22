@@ -1,10 +1,12 @@
 const express = require("express");
-const pointRoutes = require("./routes/pointRoutes");
-
 const app = express();
-app.use(express.json());
 
-// route
+const pointRoutes = require("./routes/pointRoutes");
+const pointController = require("./controllers/pointControllers");
+
+app.use(express.json());
 app.use("/api/points", pointRoutes);
+
+pointController.scheduleUpdateAllPoints();
 
 module.exports = app;
