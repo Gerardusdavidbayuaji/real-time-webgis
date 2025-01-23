@@ -1,9 +1,11 @@
+import CardDataRealTime from "./CardDataRealTime";
+
 const Sidebar = () => {
-  return (
-    <div className="bg-white top-5 left-[9px] absolute w-60 h-1/2 rounded-md z-10">
-      Sidebar
-    </div>
-  );
+    return (
+        <div className="bg-white top-0 left-0 absolute w-80 h-full z-10">
+            <CardDataRealTime />
+        </div>
+    );
 };
 
 export default Sidebar;
