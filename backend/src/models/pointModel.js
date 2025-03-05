@@ -1,12 +1,10 @@
 const pool = require("../config/db");
 
-// Fungsi untuk mengambil semua ID dari tabel
 const getAllPointIds = async () => {
   const result = await pool.query("SELECT id FROM lokasi_alat");
   return result.rows;
 };
 
-// Fungsi untuk memperbarui titik berdasarkan ID
 const updatePointById = async (id, data) => {
   const query = `
     UPDATE lokasi_alat
