@@ -6,7 +6,6 @@ async function syncDatas() {
   try {
     const response = await axios.get(process.env.PARAMETER_SENSOR);
     const data = response.data.data;
-    console.log("data sensor", data);
 
     const connection = await pool.getConnection();
 
