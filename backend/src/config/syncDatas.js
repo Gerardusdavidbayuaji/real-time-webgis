@@ -4,10 +4,10 @@ const pool = require("../config/db");
 
 async function syncDatas() {
   try {
-    const response = await axios.get(
-      "http://103.176.97.201/API/data-map.php?token=R5xRsWs8ke5HGAaY5uCS0g02HdTyOGFX"
-    );
+    const response = await axios.get(process.env.PARAMETER_SENSOR);
     const data = response.data.data;
+    console.log("data sensor", data);
+
     const connection = await pool.getConnection();
 
     for (const idSensor in data) {
