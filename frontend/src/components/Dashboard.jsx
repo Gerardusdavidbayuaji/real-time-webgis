@@ -4,8 +4,8 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import maplibregl from "maplibre-gl";
 
 import getRealTimeData from "../utils";
-import PopupCard from "./PopupCard";
 import ControlButton from "./ControlButton";
+import PopupCard from "./PopupCard";
 import Sidebar from "./Sidebar";
 
 const Dashboard = () => {

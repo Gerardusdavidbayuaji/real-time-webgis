@@ -12,14 +12,14 @@ const Sidebar = ({
 }) => {
   return (
     <div
-      className={`bg-white top-5 left-[9px] absolute w-60 h-1/2 rounded-md transition-transform duration-500 ease-in-out ${
+      className={`bg-white top-5 left-[9px] absolute w-60 h-[calc(100vh-2.5rem)] transition-transform duration-500 ease-in-out ${
         isDataLayerVisible ? "translate-x-0" : "-translate-x-[calc(100%+1rem)]"
       }`}
     >
-      <div className="flex bg-[#1e3980] text-white justify-center text-center p-3 rounded-t-md">
+      <div className="flex bg-[#1e3980] text-white justify-center text-center p-3">
         <h3>Fly to Data</h3>
       </div>
-      <div className="p-3 text-[#333333] space-y-3 overflow-y-auto max-h-[calc(100%-48px)]">
+      <div className="p-3 text-[#333333] space-y-3 overflow-y-auto max-h-[calc(100%-3rem)] rounded-b-md">
         {alatSemporData.map((item) => {
           const id = item.properties.fid;
           const { nama_sensor } = item.properties;
