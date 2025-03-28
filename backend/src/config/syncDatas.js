@@ -19,6 +19,7 @@ async function syncDatas() {
                 INSERT INTO lokasi_sensor_sempor (id, nama_sensor, nmfield, satuan, keterangan, value)
                 VALUES (?, ?, ?, ?, ?, ?)
                 ON DUPLICATE KEY UPDATE
+                nama_sensor = VALUES(nama_sensor),
                 nmfield = VALUES(nmfield),
                 satuan = VALUES(satuan),
                 value = VALUES(value),
