@@ -5,11 +5,16 @@ const PopupCard = (features) => {
         f.properties;
 
       return `
-      <div style="margin-bottom: 8px;">
-        <div><strong>${fid}-Sensor</strong> : ${nama_sensor}</div>
-        <div><strong>Field</strong>         : ${nmfield}</div>
-        <div><strong>Keterangan</strong>    : ${keterangan}</div>
-        <div><strong>Nilai</strong>         : ${value} ${satuan}</div>
+      <div class="gap-y-1">
+        <div>
+          <img src="/assets/awlr-dummy.jpg" alt="awlr-dummy" class="w-full h-full object-cover rounded-md"/>
+        </div>
+        <div>
+          <div><strong>${fid}-Sensor</strong> : ${nama_sensor}</div>
+          <div><strong>Field</strong>         : ${nmfield}</div>
+          <div><strong>Keterangan</strong>    : ${keterangan}</div>
+          <div><strong>Nilai</strong>         : ${value} ${satuan}</div>
+        </div>
       </div>
     `;
     })

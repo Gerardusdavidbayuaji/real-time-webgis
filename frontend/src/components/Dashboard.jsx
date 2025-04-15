@@ -4,36 +4,50 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import maplibregl from "maplibre-gl";
 
 import getRealTimeData from "../utils";
+import { getSemporLocation } from "../utils/api";
+
 import ControlButton from "./ControlButton";
+import SidebarInfo from "./SidebarInfo";
 import PopupCard from "./PopupCard";
 import Sidebar from "./Sidebar";
 
 const Dashboard = () => {
   const [isWaterBoundariesActive, setIsWaterBoundariesActive] = useState(false);
   const [isDataLayerVisible, setIsDataLayerVisible] = useState(false);
+  const [isInfoLayerVisible, setIsInfoLayerVisible] = useState(false);
   const [isBuildingActive, setIsBuildingActive] = useState(false);
   const [isTerrainActive, setIsTerrainActive] = useState(true);
   const [isRotateActive, setIsRotateActive] = useState(false);
   const [isFocusActive, setIsFocusActive] = useState(false);
   const [alatSemporData, setAlatSemporData] = useState([]);
+  const [semporLocation, setSemporLocation] = useState([]);
   const [isToolActive, setIsToolActive] = useState(false);
 
   const rotationRequestRef = useRef(null);
   const lastPopupCoordRef = useRef(null);
-  const popupRef = useRef(null);
+  const popupRef = useRef([]);
   const mapRef = useRef(null);
 
-  const fetchData = async () => {
+  const initialViewRef = useRef({
+    center: [109.48839, -7.556628],
+    zoom: 14.2,
+    pitch: 65,
+    bearing: 0,
+  });
+
+  const fetchSemporParameter = async () => {
     try {
-      const data = await getRealTimeData();
+      const semporParameters = await getRealTimeData();
+      const semporLocationsData = await getSemporLocation();
 
       if (mapRef.current && mapRef.current.getSource("alatSempor")) {
-        mapRef.current.getSource("alatSempor").setData(data);
+        mapRef.current.getSource("alatSempor").setData(semporParameters);
       }
 
-      setAlatSemporData(data.features);
+      setAlatSemporData(semporParameters.features);
+      setSemporLocation(semporLocationsData.features);
     } catch (error) {
-      console.log("Upss, error fetch data:", error);
+      console.log("Upss, error fetch sempor datas:", error);
     }
   };
 
@@ -57,7 +71,7 @@ const Dashboard = () => {
       const popupContent = PopupCard(sameCoordinates);
 
       popupRef.current.setHTML(
-        `<div style="font-size: 12px; color: #333333; background-color: #d7e0e9; padding: 10px; border-radius: 8px; max-height: 300px; overflow-y: auto;">${popupContent}</div>`
+        `<div class=" text-md text-[#333333] bg-[#d7e0e9] p-2 rounded-md max-h-72 overflow-y-auto">${popupContent}</div>`
       );
     } catch (error) {
       console.error("Gagal fetch popup data:", error);
@@ -65,7 +79,7 @@ const Dashboard = () => {
   };
 
   useEffect(() => {
-    fetchData();
+    fetchSemporParameter();
   }, []);
 
   useEffect(() => {
@@ -104,6 +118,10 @@ const Dashboard = () => {
             type: "geojson",
             data: "http://localhost:8080/geoserver/demo_serayu_opak/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=demo_serayu_opak%3Alokasi_sensor_sempor&outputFormat=application%2Fjson",
           },
+          lokasiSempor: {
+            type: "geojson",
+            data: "http://localhost:8080/geoserver/demo_serayu_opak/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=demo_serayu_opak%3Alokasi_bendungan_sempor&outputFormat=application%2Fjson",
+          },
           batasWadukSempor: {
             type: "geojson",
             data: "http://103.176.97.201:8080/geoserver/serayu_sempor/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=serayu_sempor%3Abatas_waduk_sempor&outputFormat=application%2Fjson",
@@ -134,6 +152,16 @@ const Dashboard = () => {
             id: "alat-sempor-layer",
             type: "symbol",
             source: "alatSempor",
+            layout: {
+              "icon-image": "workshop-icon",
+              "icon-size": 0.3,
+              visibility: "none",
+            },
+          },
+          {
+            id: "lokasi-sempor-layer",
+            type: "symbol",
+            source: "lokasiSempor",
             layout: {
               "icon-image": "workshop-icon",
               "icon-size": 0.3,
@@ -210,6 +238,13 @@ const Dashboard = () => {
       map.on("mouseenter", "alat-sempor-layer", () => {
         map.getCanvas().style.cursor = "pointer";
       });
+
+      initialViewRef.current = {
+        center: map.getCenter().toArray(),
+        zoom: map.getZoom(),
+        pitch: map.getPitch(),
+        bearing: map.getBearing(),
+      };
     });
 
     mapRef.current = map;
@@ -253,6 +288,75 @@ const Dashboard = () => {
       );
     }
   };
+
+  const handleResetView = () => {
+    const { center, zoom, pitch, bearing } = initialViewRef.current;
+
+    mapRef.current.flyTo({
+      center,
+      zoom,
+      pitch,
+      bearing,
+      speed: 0.8,
+      curve: 1.4,
+      essential: true,
+    });
+  };
+
+  const handleToggleInfo = () => {
+    const beVisible = !isInfoLayerVisible;
+
+    setIsInfoLayerVisible(beVisible);
+
+    mapRef.current.setLayoutProperty(
+      "lokasi-sempor-layer",
+      "visibility",
+      beVisible ? "visible" : "none"
+    );
+
+    if (beVisible) {
+      popupRef.current = [];
+
+      const semporPoint = semporLocation.find(
+        (f) => f.id === "lokasi_bendungan_sempor.4"
+      );
+
+      if (semporPoint) {
+        const [lng, lat] = semporPoint.geometry.coordinates;
+        mapRef.current.flyTo({
+          center: [lng, lat],
+          zoom: 16,
+          pitch: 66,
+          speed: 0.8,
+          curve: 1.4,
+          essential: true,
+        });
+      }
+
+      const allPopups = semporLocation.map((feature) => {
+        const [lng, lat] = feature.geometry.coordinates;
+        const nama = feature.properties.nama;
+
+        const popup = new maplibregl.Popup({
+          closeButton: false,
+          closeOnClick: false,
+        })
+          .setLngLat([lng, lat])
+          .setHTML(
+            `<div class="text-sm font-normal bg-[#d5dfe8] text-black p-2 rounded-md">${nama}</div>`
+          )
+          .addTo(mapRef.current);
+
+        return popup;
+      });
+
+      popupRef.current = allPopups;
+    } else {
+      popupRef.current.forEach((popup) => popup.remove());
+      popupRef.current = [];
+    }
+  };
+
   const handleToggleWaterBoundaries = () => {
     setIsWaterBoundariesActive((prev) => !prev);
     if (mapRef.current) {
@@ -303,6 +407,8 @@ const Dashboard = () => {
         handleToggleTool={handleToggleTool}
         handleToggleWaterBoundaries={handleToggleWaterBoundaries}
         handleToggleBuildings={handleToggleBuildings}
+        handleToggleInfo={handleToggleInfo}
+        handleResetView={handleResetView}
       />
       <Sidebar
         isDataLayerVisible={isDataLayerVisible}
@@ -312,6 +418,7 @@ const Dashboard = () => {
         handleFlyTo={handleFlyTo}
         handleRotateCamera={handleRotateCamera}
       />
+      <SidebarInfo isInfoLayerVisible={isInfoLayerVisible} />
     </div>
   );
 };
